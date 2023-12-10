@@ -1,0 +1,227 @@
+CREATE SCHEMA IF NOT EXISTS `mydb` DEFAULT CHARACTER SET utf8 ;
+USE `mydb` ;
+
+-- -----------------------------------------------------
+-- Table `mydb`.`TEMPORADA`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`TEMPORADA` (
+  `nombre_temporada` VARCHAR(30) NOT NULL,
+  `fecha_inicio` DATE NULL,
+  `fecha_fin` DATE NULL,
+  PRIMARY KEY (`nombre_temporada`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`ARBITRO`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`ARBITRO` (
+  `id_arbitro` INT NOT NULL,
+  `nombre` VARCHAR(15) NULL,
+  `apellidos` VARCHAR(25) NULL,
+  `telefono` INT NULL,
+  `nacionalidad` VARCHAR(25) NULL,
+  PRIMARY KEY (`id_arbitro`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`PARTIDO`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`PARTIDO` (
+  `id_partido` INT NOT NULL,
+  `num_jornada` INT NULL,
+  `fecha_y_hora` DATETIME NULL,
+  `resultado` VARCHAR(20) NULL,
+  `TEMPORADA_nombre_temporada` VARCHAR(30) NOT NULL,
+  `ARBITRO_id_arbitro` INT NOT NULL,
+  PRIMARY KEY (`id_partido`),
+  INDEX `fk_PARTIDO_TEMPORADA1_idx` (`TEMPORADA_nombre_temporada` ASC) VISIBLE,
+  INDEX `fk_PARTIDO_ARBITRO1_idx` (`ARBITRO_id_arbitro` ASC) VISIBLE,
+  CONSTRAINT `fk_PARTIDO_TEMPORADA1`
+    FOREIGN KEY (`TEMPORADA_nombre_temporada`)
+    REFERENCES `mydb`.`TEMPORADA` (`nombre_temporada`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_PARTIDO_ARBITRO1`
+    FOREIGN KEY (`ARBITRO_id_arbitro`)
+    REFERENCES `mydb`.`ARBITRO` (`id_arbitro`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`ESTADIO`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`ESTADIO` (
+  `nombre_estadio` VARCHAR(30) NOT NULL,
+  `direccion` VARCHAR(20) NULL,
+  `pais` VARCHAR(25) NULL,
+  `ciudad` VARCHAR(25) NULL,
+  `telefono` INT NULL,
+  PRIMARY KEY (`nombre_estadio`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`EQUIPO`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`EQUIPO` (
+  `nombre_equipo` VARCHAR(30) NOT NULL,
+  `pais` VARCHAR(30) NULL,
+  `entrenador` VARCHAR(30) NULL,
+  `año_fundacion` INT NULL,
+  `ESTADIO_nombre_estadio` VARCHAR(30) NOT NULL,
+  PRIMARY KEY (`nombre_equipo`),
+  INDEX `fk_EQUIPO_ESTADIO1_idx` (`ESTADIO_nombre_estadio` ASC) VISIBLE,
+  CONSTRAINT `fk_EQUIPO_ESTADIO1`
+    FOREIGN KEY (`ESTADIO_nombre_estadio`)
+    REFERENCES `mydb`.`ESTADIO` (`nombre_estadio`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`JUGADOR`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`JUGADOR` (
+  `dni` VARCHAR(9) NOT NULL,
+  `nombre` VARCHAR(15) NULL,
+  `apellidos` VARCHAR(25) NULL,
+  `fecha_nacimiento` DATE NULL,
+  `nacionalidad` VARCHAR(25) NULL,
+  `telefono` INT NULL,
+  `EQUIPO_nombre_equipo` VARCHAR(30) NOT NULL,
+  PRIMARY KEY (`dni`),
+  INDEX `fk_JUGADOR_EQUIPO1_idx` (`EQUIPO_nombre_equipo` ASC) VISIBLE,
+  CONSTRAINT `fk_JUGADOR_EQUIPO1`
+    FOREIGN KEY (`EQUIPO_nombre_equipo`)
+    REFERENCES `mydb`.`EQUIPO` (`nombre_equipo`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`ASISTENCIA`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`ASISTENCIA` (
+  `id_asistencia` INT NOT NULL,
+  `JUGADOR_dni` VARCHAR(9) NOT NULL,
+  PRIMARY KEY (`id_asistencia`),
+  INDEX `fk_ASISTENCIA_JUGADOR1_idx` (`JUGADOR_dni` ASC) VISIBLE,
+  CONSTRAINT `fk_ASISTENCIA_JUGADOR1`
+    FOREIGN KEY (`JUGADOR_dni`)
+    REFERENCES `mydb`.`JUGADOR` (`dni`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`GOL`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`GOL` (
+  `id_gol` INT NOT NULL,
+  `tiempo` INT NULL,
+  `tipo` VARCHAR(25) NULL,
+  `ASISTENCIA_id_asistencia` INT NOT NULL,
+  `JUGADOR_dni` VARCHAR(9) NOT NULL,
+  `PARTIDO_id_partido` INT NOT NULL,
+  PRIMARY KEY (`id_gol`),
+  INDEX `fk_GOL_ASISTENCIA1_idx` (`ASISTENCIA_id_asistencia` ASC) VISIBLE,
+  INDEX `fk_GOL_JUGADOR1_idx` (`JUGADOR_dni` ASC) VISIBLE,
+  INDEX `fk_GOL_PARTIDO1_idx` (`PARTIDO_id_partido` ASC) VISIBLE,
+  CONSTRAINT `fk_GOL_ASISTENCIA1`
+    FOREIGN KEY (`ASISTENCIA_id_asistencia`)
+    REFERENCES `mydb`.`ASISTENCIA` (`id_asistencia`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_GOL_JUGADOR1`
+    FOREIGN KEY (`JUGADOR_dni`)
+    REFERENCES `mydb`.`JUGADOR` (`dni`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_GOL_PARTIDO1`
+    FOREIGN KEY (`PARTIDO_id_partido`)
+    REFERENCES `mydb`.`PARTIDO` (`id_partido`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`juega_local`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`juega_local` (
+  `PARTIDO_id_partido` INT NOT NULL,
+  `EQUIPO_nombre_equipo` VARCHAR(30) NOT NULL,
+  PRIMARY KEY (`PARTIDO_id_partido`, `EQUIPO_nombre_equipo`),
+  INDEX `fk_PARTIDO_has_EQUIPO_EQUIPO1_idx` (`EQUIPO_nombre_equipo` ASC) VISIBLE,
+  INDEX `fk_PARTIDO_has_EQUIPO_PARTIDO_idx` (`PARTIDO_id_partido` ASC) VISIBLE,
+  CONSTRAINT `fk_PARTIDO_has_EQUIPO_PARTIDO`
+    FOREIGN KEY (`PARTIDO_id_partido`)
+    REFERENCES `mydb`.`PARTIDO` (`id_partido`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_PARTIDO_has_EQUIPO_EQUIPO1`
+    FOREIGN KEY (`EQUIPO_nombre_equipo`)
+    REFERENCES `mydb`.`EQUIPO` (`nombre_equipo`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`juega_visitante`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`juega_visitante` (
+  `PARTIDO_id_partido` INT NOT NULL,
+  `EQUIPO_nombre_equipo` VARCHAR(30) NOT NULL,
+  PRIMARY KEY (`PARTIDO_id_partido`, `EQUIPO_nombre_equipo`),
+  INDEX `fk_PARTIDO_has_EQUIPO_EQUIPO2_idx` (`EQUIPO_nombre_equipo` ASC) VISIBLE,
+  INDEX `fk_PARTIDO_has_EQUIPO_PARTIDO1_idx` (`PARTIDO_id_partido` ASC) VISIBLE,
+  CONSTRAINT `fk_PARTIDO_has_EQUIPO_PARTIDO1`
+    FOREIGN KEY (`PARTIDO_id_partido`)
+    REFERENCES `mydb`.`PARTIDO` (`id_partido`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_PARTIDO_has_EQUIPO_EQUIPO2`
+    FOREIGN KEY (`EQUIPO_nombre_equipo`)
+    REFERENCES `mydb`.`EQUIPO` (`nombre_equipo`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`fichan`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`fichan` (
+  `EQUIPO_nombre_equipo` VARCHAR(30) NOT NULL,
+  `JUGADOR_dni` VARCHAR(9) NOT NULL,
+  `fecha` DATE NULL,
+  `tarifa_transferencia` VARCHAR(25) NULL,
+  `contrato` VARCHAR(10) NULL,
+  `clausula` VARCHAR(25) NULL,
+  PRIMARY KEY (`EQUIPO_nombre_equipo`, `JUGADOR_dni`),
+  INDEX `fk_EQUIPO_has_JUGADOR_JUGADOR1_idx` (`JUGADOR_dni` ASC) VISIBLE,
+  INDEX `fk_EQUIPO_has_JUGADOR_EQUIPO1_idx` (`EQUIPO_nombre_equipo` ASC) VISIBLE,
+  CONSTRAINT `fk_EQUIPO_has_JUGADOR_EQUIPO1`
+    FOREIGN KEY (`EQUIPO_nombre_equipo`)
+    REFERENCES `mydb`.`EQUIPO` (`nombre_equipo`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_EQUIPO_has_JUGADOR_JUGADOR1`
+    FOREIGN KEY (`JUGADOR_dni`)
+    REFERENCES `mydb`.`JUGADOR` (`dni`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
